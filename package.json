@@ -1,0 +1,39 @@
+{
+	"name": "blocknumber",
+	"displayName": "Block Number",
+	"description": "Shows the blocknumber of selected network in ETHcode.",
+	"version": "0.0.1",
+	"publisher": "7finney",
+	"license": "MIT",
+	"categories": [
+		"Programming Languages",
+		"Education"
+	],
+	"extensionDependencies": [
+		"7finney.blocknumber"
+	],
+	"engines": {
+		"vscode": "^1.38.1",
+		"node": ">=16.0.0"
+	},
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/src/extension.js",
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint \"src/**/*.ts\"",
+		"watch": "tsc -watch -p ./"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.32.0",
+		"@typescript-eslint/eslint-plugin": "^5.42.0",
+		"@typescript-eslint/parser": "^5.42.0",
+		"eslint": "^8.26.0",
+		"typescript": "^4.8.4"
+	},
+	"dependencies": {
+		"ethers": "^5.7.2"
+	}
+}
