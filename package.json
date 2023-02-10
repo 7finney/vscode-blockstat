@@ -1,7 +1,7 @@
 {
 	"name": "blocknumber",
 	"displayName": "Block Number",
-	"description": "Shows the blocknumber of selected network in ETHcode.",
+	"description": "Shows the blocknumber of selected network",
 	"version": "0.0.1",
 	"publisher": "7finney",
 	"license": "MIT",
@@ -12,6 +12,7 @@
 	"extensionDependencies": [
 		"7finney.blocknumber"
 	],
+	"repository": "https://github.com/Aniket6990/vscode-blocknumber",
 	"engines": {
 		"vscode": "^1.38.1",
 		"node": ">=16.0.0"
