@@ -10,7 +10,7 @@
 		"Education"
 	],
 	"extensionDependencies": [
-		"7finney.blocknumber"
+		"7finney.ethcode"
 	],
 	"repository": "https://github.com/Aniket6990/vscode-blocknumber",
 	"engines": {
@@ -35,6 +35,7 @@
 		"typescript": "^4.8.4"
 	},
 	"dependencies": {
-		"ethers": "^5.7.2"
+		"@ethersproject/address": "^5.7.0",
+		"ethers": "5.7.2"
 	}
 }
