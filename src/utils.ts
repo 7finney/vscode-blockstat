@@ -12,7 +12,7 @@ export function shortenAddress(
   charsStart = 4,
   charsEnd?: number
 ): string {
-  return `${address.slice(0, charsStart + 2)}...${address.slice(
+  return `${address.substring(0, charsStart + 2)}...${address.substring(
     42 - (charsEnd || charsStart)
   )}`;
 }

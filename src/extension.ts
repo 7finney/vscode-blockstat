@@ -50,6 +50,11 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 
   const blockScannerCommand = "blockNumber.showBlockScanner";
   const showAccountCommand = "blockNumber.showAccount";
+  let selectedNetworkConfig: NetworkConfig =
+    await ethcode.provider.network.get();
+  let ethcodeProvider: any = await ethcode.provider.get();
+  let selectedNetwork: string;
+  let selectedAccount: string;
   vscode.commands.registerCommand(blockScannerCommand, () =>
     vscode.commands.executeCommand(
       "vscode.open",
@@ -69,39 +74,80 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
    *  then keep updating blocknumber after listening
    *  from the provider
    */
-  const selectedNetworkConfig: NetworkConfig = ethcode.provider.network.get();
-  const ethcodeProvider = ethcode.provider.get();
-  ethcodeProvider.on("block", async (blockNumber: number) => {
-    if (blockNumber > 0) {
-      const gasPrice = await ethcodeProvider.getGasPrice();
-      const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
-      myStatusBarItemPrimary.text = `$(symbol-constructor) ${selectedNetworkConfig.nativeCurrency.name}: ${blockNumber} ${gasPriceInGwei}`;
-      myStatusBarItemPrimary.command = blockScannerCommand;
-      myStatusBarItemPrimary.show();
+
+  // detect network change
+  ethcode.ethcode.network.event(async (network: string) => {
+    selectedNetwork = network;
+    ethcodeProvider = await ethcode.provider.get();
+    selectedNetworkConfig = await ethcode.provider.network.get();
+    if (selectedAccount !== undefined && ethcodeProvider !== undefined) {
+      checkBalance(
+        showAccountCommand,
+        selectedAccount,
+        ethcodeProvider,
+        selectedNetworkConfig
+      );
+    }
+
+    ethcodeProvider.on("block", async (blockNumber: number) => {
+      console.log(`${blockNumber}`);
+      const network = await ethcodeProvider.getNetwork();
+      console.log(`chainID: ${JSON.parse(JSON.stringify(network)).chainId}`);
+      const networkChainId = JSON.parse(JSON.stringify(network)).chainId;
+      if (
+        blockNumber > 0 &&
+        networkChainId == parseInt(selectedNetworkConfig.chainID)
+      ) {
+        const gasPrice = await ethcodeProvider.getGasPrice();
+        const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
+        myStatusBarItemPrimary.text = `$(symbol-constructor) ${selectedNetwork}: ${blockNumber} ${gasPriceInGwei}`;
+        myStatusBarItemPrimary.command = blockScannerCommand;
+        myStatusBarItemPrimary.show();
+      } else {
+        vscode.window.showInformationMessage("No network selected");
+        myStatusBarItemPrimary.hide();
+      }
+    });
+  });
+
+  ethcode.ethcode.account.event(async (account: string) => {
+    selectedAccount = account;
+    if (ethcodeProvider !== undefined) {
+      checkBalance(
+        showAccountCommand,
+        selectedAccount,
+        ethcodeProvider,
+        selectedNetworkConfig
+      );
     } else {
-      myStatusBarItemPrimary.hide();
+      vscode.window.showInformationMessage("No Network selected.");
     }
   });
-  checkBalance(showAccountCommand, selectedNetworkConfig);
+  // checkBalance(showAccountCommand, selectedNetworkConfig, selectedAccount);
 }
-const checkBalance = async (command: string, networkConfig: NetworkConfig) => {
-  const ethcodeProvider = ethcode.provider.get();
-  const accounts: Array<string> = await ethcode.wallet.list();
-  if (accounts.length > 0) {
-    const balance = await ethcodeProvider
-      .getBalance(accounts[0])
+const checkBalance = async (
+  command: string,
+  currentAccount: string,
+  provider: any,
+  networkConfig: NetworkConfig
+) => {
+  if (currentAccount.length >= 42) {
+    const balance = await provider
+      .getBalance(currentAccount)
       .then((balance: number) => {
         const balanceInEther = ethers.utils.formatEther(balance);
         return balanceInEther;
       });
+
     const dataToPrint = `$(file-code) ${balance} ${
       networkConfig.nativeCurrency.symbol
-    } ${shortenAddress(accounts[0], 4)}`;
+    } ${shortenAddress(currentAccount, 4)}`;
+
     myStatusBarItemSecondary.text = dataToPrint;
     myStatusBarItemSecondary.command = command;
     myStatusBarItemSecondary.show();
   } else {
+    vscode.window.showInformationMessage("No account selected.");
     myStatusBarItemPrimary.hide();
-    vscode.window.showInformationMessage("No account available in ETHcode.");
   }
 };
