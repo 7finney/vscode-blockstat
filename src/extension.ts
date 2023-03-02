@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import * as vscode from "vscode";
+import { CHAIN_DATA_LIST } from "./chains";
 import { shortenAddress } from "./utils";
 
 interface NativeCurrency {
@@ -50,10 +51,9 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 
   const blockScannerCommand = "blockNumber.showBlockScanner";
   const showAccountCommand = "blockNumber.showAccount";
-  let selectedNetworkConfig: NetworkConfig =
+  const selectedNetworkConfig: NetworkConfig =
     await ethcode.provider.network.get();
-  let ethcodeProvider: any = await ethcode.provider.get();
-  let selectedNetwork: string;
+  const ethcodeProvider: any = await ethcode.provider.get();
   let selectedAccount: string;
   vscode.commands.registerCommand(blockScannerCommand, () =>
     vscode.commands.executeCommand(
@@ -76,41 +76,27 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
    */
 
   // detect network change
-  ethcode.ethcode.network.event(async (network: string) => {
-    selectedNetwork = network;
-    ethcodeProvider = await ethcode.provider.get();
-    selectedNetworkConfig = await ethcode.provider.network.get();
-    if (selectedAccount !== undefined && ethcodeProvider !== undefined) {
-      checkBalance(
-        showAccountCommand,
-        selectedAccount,
-        ethcodeProvider,
-        selectedNetworkConfig
-      );
-    }
-
-    ethcodeProvider.on("block", async (blockNumber: number) => {
-      console.log(`${blockNumber}`);
-      const network = await ethcodeProvider.getNetwork();
-      console.log(`chainID: ${JSON.parse(JSON.stringify(network)).chainId}`);
-      const networkChainId = JSON.parse(JSON.stringify(network)).chainId;
-      if (
-        blockNumber > 0 &&
-        networkChainId == parseInt(selectedNetworkConfig.chainID)
-      ) {
-        const gasPrice = await ethcodeProvider.getGasPrice();
-        const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
-        myStatusBarItemPrimary.text = `$(symbol-constructor) ${selectedNetwork}: ${blockNumber} ${gasPriceInGwei}`;
-        myStatusBarItemPrimary.command = blockScannerCommand;
-        myStatusBarItemPrimary.show();
-      } else {
-        vscode.window.showInformationMessage("No network selected");
-        myStatusBarItemPrimary.hide();
-      }
-    });
+  ethcode.events.network.event(async (network: string) => {
+    vscode.commands.executeCommand("workbench.action.reloadWindow");
   });
 
-  ethcode.ethcode.account.event(async (account: string) => {
+  ethcodeProvider.on("block", async (blockNumber: number) => {
+    console.log(`${blockNumber}`);
+    if (blockNumber > 0) {
+      const gasPrice = await ethcodeProvider.getGasPrice();
+      const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
+      myStatusBarItemPrimary.text = `$(symbol-constructor) ${getNetworkTitle(
+        selectedNetworkConfig
+      )}: ${blockNumber} ${gasPriceInGwei}`;
+      myStatusBarItemPrimary.command = blockScannerCommand;
+      myStatusBarItemPrimary.show();
+    } else {
+      vscode.window.showInformationMessage("No network selected");
+      myStatusBarItemPrimary.hide();
+    }
+  });
+
+  ethcode.events.account.event(async (account: string) => {
     selectedAccount = account;
     if (ethcodeProvider !== undefined) {
       checkBalance(
@@ -132,10 +118,10 @@ const checkBalance = async (
   networkConfig: NetworkConfig
 ) => {
   if (currentAccount.length >= 42) {
-    const balance = await provider
+    const balance: string = await provider
       .getBalance(currentAccount)
       .then((balance: number) => {
-        const balanceInEther = ethers.utils.formatEther(balance);
+        const balanceInEther = ethers.utils.formatUnits(balance, "ether");
         return balanceInEther;
       });
 
@@ -150,4 +136,10 @@ const checkBalance = async (
     vscode.window.showInformationMessage("No account selected.");
     myStatusBarItemPrimary.hide();
   }
+};
+
+const getNetworkTitle = (selectedNetworkConfig?: NetworkConfig) => {
+  const chainData =
+    CHAIN_DATA_LIST[parseInt(selectedNetworkConfig?.chainID as string)];
+  return chainData !== undefined ? chainData.network : "Custom Net";
 };
