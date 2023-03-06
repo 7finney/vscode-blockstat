@@ -1,28 +1,27 @@
 {
-	"name": "blockstat",
-	"displayName": "BlockStat",
-	"description": "Blockchain Network Statistics and account view",
-	"version": "0.0.1",
-	"publisher": "7finney",
-	"license": "MIT",
-	"categories": [
-		"Programming Languages",
-		"Education"
-	],
-	"extensionDependencies": [
-		"7finney.ethcode"
-	],
-	"repository": "https://github.com/Aniket6990/vscode-blocknumber",
-	"engines": {
-		"vscode": "^1.38.1",
-		"node": ">=16.0.0"
-	},
-	"activationEvents": [
-		"onCommand: ethcode.activate",
-		"onCommand: blockstat.activate"
-	],
-	"main": "./out/src/extension.js",
-	"contributes": {
+  "name": "blockstat",
+  "displayName": "BlockStat",
+  "description": "Blockchain Network Statistics and account view",
+  "version": "0.0.1",
+  "publisher": "7finney",
+  "license": "MIT",
+  "categories": [
+    "Programming Languages",
+    "Education"
+  ],
+  "extensionDependencies": [
+    "7finney.ethcode"
+  ],
+  "repository": "https://github.com/7finney/vscode-blockstat",
+  "engines": {
+    "vscode": "^1.38.1",
+    "node": ">=16.0.0"
+  },
+  "activationEvents": [
+    "onCommand: blockstat.activate"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
     "configuration": {
       "title": "BlockStat"
     },
@@ -34,21 +33,21 @@
       }
     ]
   },
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"lint": "eslint \"src/**/*.ts\"",
-		"watch": "tsc -watch -p ./"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.32.0",
-		"@typescript-eslint/eslint-plugin": "^5.42.0",
-		"@typescript-eslint/parser": "^5.42.0",
-		"eslint": "^8.26.0",
-		"typescript": "^4.8.4"
-	},
-	"dependencies": {
-		"@ethersproject/address": "^5.7.0",
-		"ethers": "5.7.2"
-	}
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint \"src/**/*.ts\"",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.32.0",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "eslint": "^8.26.0",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@ethersproject/address": "^5.7.0",
+    "ethers": "5.7.2"
+  }
 }

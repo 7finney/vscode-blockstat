@@ -51,10 +51,60 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 
   const blockScannerCommand = "blockNumber.showBlockScanner";
   const showAccountCommand = "blockNumber.showAccount";
-  const selectedNetworkConfig: NetworkConfig =
-    await ethcode.provider.network.get();
-  const ethcodeProvider: any = await ethcode.provider.get();
+  let selectedNetworkConfig: NetworkConfig;
+  let ethcodeProvider: any;
+
   let selectedAccount: string;
+
+  // command to activate the extension.
+  vscode.commands.registerCommand("blockstat.activate", async () => {
+    selectedNetworkConfig = await ethcode.provider.network.get();
+    ethcodeProvider = await ethcode.provider.get();
+
+    if (ethcodeProvider === undefined) {
+      vscode.window.showInformationMessage("No network selected.");
+      return;
+    }
+    /**
+     *  update status bar item once at start
+     *  then keep updating blocknumber after listening
+     *  from the provider
+     */
+
+    // detect network change
+    ethcode.events.network.event(async (network: string) => {
+      vscode.commands.executeCommand("workbench.action.reloadWindow");
+    });
+
+    ethcodeProvider.on("block", async (blockNumber: number) => {
+      if (blockNumber > 0) {
+        const gasPrice = await ethcodeProvider.getGasPrice();
+        const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
+        myStatusBarItemPrimary.text = `$(symbol-constructor) ${getNetworkTitle(
+          selectedNetworkConfig
+        )}: ${blockNumber} ${gasPriceInGwei} Gwei`;
+        myStatusBarItemPrimary.command = blockScannerCommand;
+        myStatusBarItemPrimary.show();
+      } else {
+        vscode.window.showInformationMessage("No network selected");
+        myStatusBarItemPrimary.hide();
+      }
+    });
+
+    ethcode.events.account.event(async (account: string) => {
+      selectedAccount = account;
+      if (ethcodeProvider !== undefined) {
+        checkBalance(
+          showAccountCommand,
+          selectedAccount,
+          ethcodeProvider,
+          selectedNetworkConfig
+        );
+      } else {
+        vscode.window.showInformationMessage("No Network selected.");
+      }
+    });
+  });
   vscode.commands.registerCommand(blockScannerCommand, () =>
     vscode.commands.executeCommand(
       "vscode.open",
@@ -69,46 +119,6 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
     })
   );
 
-  /**
-   *  update status bar item once at start
-   *  then keep updating blocknumber after listening
-   *  from the provider
-   */
-
-  // detect network change
-  ethcode.events.network.event(async (network: string) => {
-    vscode.commands.executeCommand("workbench.action.reloadWindow");
-  });
-
-  ethcodeProvider.on("block", async (blockNumber: number) => {
-    console.log(`${blockNumber}`);
-    if (blockNumber > 0) {
-      const gasPrice = await ethcodeProvider.getGasPrice();
-      const gasPriceInGwei = ethers.utils.formatUnits(gasPrice, "gwei");
-      myStatusBarItemPrimary.text = `$(symbol-constructor) ${getNetworkTitle(
-        selectedNetworkConfig
-      )}: ${blockNumber} ${gasPriceInGwei}`;
-      myStatusBarItemPrimary.command = blockScannerCommand;
-      myStatusBarItemPrimary.show();
-    } else {
-      vscode.window.showInformationMessage("No network selected");
-      myStatusBarItemPrimary.hide();
-    }
-  });
-
-  ethcode.events.account.event(async (account: string) => {
-    selectedAccount = account;
-    if (ethcodeProvider !== undefined) {
-      checkBalance(
-        showAccountCommand,
-        selectedAccount,
-        ethcodeProvider,
-        selectedNetworkConfig
-      );
-    } else {
-      vscode.window.showInformationMessage("No Network selected.");
-    }
-  });
   // checkBalance(showAccountCommand, selectedNetworkConfig, selectedAccount);
 }
 const checkBalance = async (
