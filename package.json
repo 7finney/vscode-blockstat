@@ -1,7 +1,7 @@
 {
-	"name": "blocknumber",
-	"displayName": "Block Number",
-	"description": "Shows the blocknumber of selected network",
+	"name": "blockstat",
+	"displayName": "BlockStat",
+	"description": "Blockchain Network Statistics and account view",
 	"version": "0.0.1",
 	"publisher": "7finney",
 	"license": "MIT",
@@ -18,9 +18,22 @@
 		"node": ">=16.0.0"
 	},
 	"activationEvents": [
-		"*"
+		"onCommand: ethcode.activate",
+		"onCommand: blockstat.activate"
 	],
 	"main": "./out/src/extension.js",
+	"contributes": {
+    "configuration": {
+      "title": "BlockStat"
+    },
+    "commands": [
+      {
+        "command": "blockstat.activate",
+        "title": "Activate extension",
+        "category": "BlockStat"
+      }
+    ]
+  },
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
