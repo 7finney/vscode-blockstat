@@ -73,7 +73,17 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 
     // detect network change
     ethcode.events.network.event(async (network: string) => {
-      vscode.commands.executeCommand("workbench.action.reloadWindow");
+      vscode.window
+        .showInformationMessage(
+          "Blockstat extension wants to reload the window?",
+          "Yes",
+          "No"
+        )
+        .then((selection) => {
+          if (selection === "Yes") {
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
     });
 
     ethcodeProvider.on("block", async (blockNumber: number) => {
